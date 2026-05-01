@@ -176,7 +176,7 @@ def test_multiply():
             print(f"результат: {result_str[:200]}")
             print(f"ожидалось: {expected[:200]}")
             print()
-            
+
     print(f"в среднем за {total_time / count_tests}")
 
 test_multiply()
@@ -220,7 +220,7 @@ def test_add():
     print(f"совпадений сложения: {count_true} из {test_count}")
     print(f"среднее время работы: {avg_time:.8f} с")
 
-# test_add()
+test_add()
 
 
 
@@ -390,7 +390,7 @@ def test_addition_substraction_small_value():
             b = result.value[1]
             
             test_addition = addition(a, b)
-            test_substraction = substruction(a, b)
+            test_substraction = subtruction(a, b)
 
             res_add = true_value_add(a, b)
             res_sub = true_value_sub(a, b)
