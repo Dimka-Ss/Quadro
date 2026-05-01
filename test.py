@@ -1,8 +1,12 @@
 from BigFloat import *
 from BigFloat_Arithmetic_Add_Sub import *
 from BigFloat_Interpret import *
+from BigFloat_Arithmetic_Fouriera import *
 
 
+import random
+from decimal import Decimal, getcontext
+from time import perf_counter
 
 
 def test_normalize():           #00234234.3515124234340
@@ -83,9 +87,146 @@ def test_align():
 # test_substraction()
 
 
+getcontext().prec = 10000
+
+def random_bigf():
+    mantiss = []
+    exp = random.randrange(-10000, 0)
+    prec = random.choice([2000, 1999])
+    for _ in range(prec):
+        elem = random.randrange(9000,10000)
+        mantiss.append(elem)
+    sign = random.choice([1, -1])
+    return normalize(BigFloat(sign, tuple(mantiss), exp))
+
+
+def test_mul():
+    test_count = 1000
+    count_true = 0
+    total_time = 0.0  
+
+    getcontext().prec = 50000
+
+    for i in range(test_count):
+        a_bigf = random_bigf()
+        b_bigf = random_bigf()
+
+        a_decimal = Decimal(to_string_for_output(a_bigf))
+        b_decimal = Decimal(to_string_for_output(b_bigf))
+
+        res_dec = str(a_decimal * b_decimal)
+
+        start = perf_counter()
+        res_bigf = to_string_for_output(main_multiply(a_bigf, b_bigf))
+        end = perf_counter() - start
+
+        total_time += end
+
+        if res_bigf[:10000] == res_dec[:10000]:
+            count_true += 1
+        else:
+            for j in range(len(res_bigf)):
+                if res_bigf[j] != res_dec[i]:
+                    print(f'не совпали на знаке {j}')
+                    break
+
+
+
+    avg_time = total_time / test_count
+    print(f"совпадений умножения: {count_true} из {test_count}")
+    print(f"среднее время работы: {avg_time:.8f} ")
+
+
+# test_mul()
+
+
+
+
+def test_multiply():
+
+    getcontext().prec = 50000
+
+    total_time = 0.0
+
+    count_tests = 100
+
+    for _ in range(count_tests ):
+        a = random_bigf()
+        b = random_bigf()
+
+        a_bigf = to_string_for_output(a)
+        b_bigf = to_string_for_output(b)
+
+        expected = Decimal(a_bigf) * Decimal(b_bigf)
+        expected = f'{expected:.10000f}'
+
+        t1 = perf_counter()
+        result = main_multiply(a, b)
+        t2 = perf_counter() - t1
+
+        total_time += t2
+
+        result_str = to_string_for_output(result)
+        ok = result_str[:10000] == expected[:10000]
+
+        print("OK:", ok)
+        print("TIME:", t2)
+
+        if not ok:
+            print(f"результат: {result_str[:200]}")
+            print(f"ожидалось: {expected[:200]}")
+            print()
+            
+    print(f"в среднем за {total_time / count_tests}")
+
+test_multiply()
+
+
+def test_add():
+    test_count = 100
+    count_true = 0
+    total_time = 0.0 
+
+    getcontext().prec = 20000
+
+    for i in range(test_count):
+        a_bigf = random_bigf()
+        b_bigf = random_bigf()
+
+        a_decimal = Decimal(to_string_for_output(a_bigf))
+        b_decimal = Decimal(to_string_for_output(b_bigf))
+
+        res_dec = str(a_decimal + b_decimal)
+
+        start = perf_counter()
+        res_bigf = to_string_for_output(addition(a_bigf, b_bigf))
+        elapsed = perf_counter() - start
+
+        total_time += elapsed
+
+        if Decimal(res_bigf) == Decimal(res_dec):
+            count_true += 1
+        else:
+            # for j in range(len(res_bigf)):
+            #     if res_bigf[j] != res_dec[j]:
+            #         print(f'не совпали на знаке {j}')
+            #         break
+            
+            print(f"не совпали (тест {i + 1}):")
+            # print(f"   bigf: {res_bigf}")
+            # print(f"   dec:  {res_dec}")
+
+    avg_time = total_time / test_count
+    print(f"совпадений сложения: {count_true} из {test_count}")
+    print(f"среднее время работы: {avg_time:.8f} с")
+
+# test_add()
+
+
 
 def test_interpret_small_input_values():
-    tests = (   " 13.233 3.3213213",
+    tests = ( 
+          " 13.233 3.3213213",
                 "+ 13.233 3.3213213",
                 "- 13.233 3.3213213",
                 ". 13.233 3.3213213",
@@ -111,38 +252,53 @@ def test_interpret_small_input_values():
                 "1 13.233 3.3213213",
                 "9 13.233 3.3213213",
                 "10 13.233 3.3213213",
-                "123 13.233 3.3213213",
-                "+123 13.233 3.3213213",
-                "-123 13.233 3.3213213",
-                "1.5 13.233 3.3213213",
-                "1,5 13.233 3.3213213",
-                "0.5 13.233 3.3213213",
-                "0,5 13.233 3.3213213",
-                ".5 13.233 3.3213213",
-                ",5 13.233 3.3213213",
-                "+.5 13.233 3.3213213",
-                "-.5 13.233 3.3213213",
-                "1e2 13.233 3.3213213",
-                "1E2 13.233 3.3213213",
-                "1e+2 13.233 3.3213213",
-                "1e-2 13.233 3.3213213",
-                "-1.5e+10 13.233 3.3213213",
-                "+.5E-3 13.233 3.3213213000000000")
+                "123",
+                "+123",
+                "-123",
+                "1.5",
+                "1,5",
+                "0.5",
+                "0,5",
+                ".5",
+                ",5",
+                "+.5",
+                "-.5",
+                "1e2",
+                "1E2",
+                "1e+2",
+                "1e-2",
+                "-1.5e+10",
+                "+.5E-3"
+                )
                 # "8e-4596442 13.233 3.3213213")
 
     for i in tests:
         string = i
-        result = Input().interpret(string)
+        result = FloatParser().interpret(string)
         if not result.success:
             print(f"ошибка в строкке {string}: {result.error}")
-
-        for j in result.value:
-            print(f"результат: {to_string_for_output(j)}")
+        else:
+            print(f"результат: {to_string_for_output(result.value)}")
         print()
+
 
 # test_interpret_small_input_values()
 
-def test_addition_substraction():
+
+def true_value_add(a, b):
+    t1 = float(to_string_for_output(a))
+    t2 = float(to_string_for_output(b))
+
+    return (t1 + t2)
+
+def true_value_sub(a, b):
+    t1 = float(to_string_for_output(a))
+    t2 = float(to_string_for_output(b))
+
+    return (t1 - t2)
+    
+    
+def test_addition_substraction_small_value():
 
     tests = (
         "0 0 1",           
@@ -232,18 +388,23 @@ def test_addition_substraction():
 
             a = result.value[0]
             b = result.value[1]
+            
             test_addition = addition(a, b)
             test_substraction = substruction(a, b)
-            print(f"строка '{i}' сложение a и b результат: {to_string_for_output(test_addition)} ")
 
-            print(f"строка '{i}' вычитание a и b результат: {i}: {to_string_for_output(test_substraction)} ")
+            res_add = true_value_add(a, b)
+            res_sub = true_value_sub(a, b)
+            
+            print(f"строка '{i}' сложение a и b, \n ожидаемый результат: {res_add} \n результат: {to_string_for_output(test_addition)} ")
+
+            print(f"строка '{i}' вычитание a и b,  \n ожидаемый результат: {res_sub} \n результат: {i}: {to_string_for_output(test_substraction)} ")
             print()
         
         else:
             print(f"ошибка в строкке {string}: {result.error}")
             print()
 
-# test_addition_substraction()
+# test_addition_substraction_small_value()
 
 
 def single_test(string):
@@ -253,7 +414,7 @@ def single_test(string):
         a = result.value[0]
         b = result.value[1]
         test_addition = addition(a, b)
-        test_substraction = substruction(a, b)
+        test_substraction = subtruction(a, b)
         print(f"результат сложения: {to_string_for_output(test_addition)} ")
         print()
         print(f"результат вычитания: {to_string_for_output(test_substraction)} ")
@@ -263,3 +424,43 @@ def single_test(string):
         print(f"ошибка в строкке {string}: {result.error}")
 
 # single_test()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
