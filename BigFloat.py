@@ -1,10 +1,10 @@
 
 class BigFloat:
 
-    CHUNK_SIZE = 4
+    CHUNK_SIZE = 5
     BASE = 10 ** CHUNK_SIZE
 
-    def __init__(self, sign: int = 1, chunks: tuple = (), exponent: int = 0):
+    def __init__(self, sign: int = 1, chunks: list = [], exponent: int = 0):
         self.sign = sign
         self.chunks = chunks
         self.exponent = exponent
@@ -12,14 +12,29 @@ class BigFloat:
     def set_sign(self, sign: int):
         self.sign = sign
 
-    def set_chunks(self, mantiss: tuple):
+    def set_chunks(self, mantiss: list):
         self.chunks = mantiss
 
     def set_exponent(self, exponent: int):
         self.exponent = exponent
 
 
-def get_mantiss(chunks: tuple):
+def BigFloat_round(bigf: BigFloat, precision: int):
+
+    chunks = list(bigf.chunks)
+    exp = bigf.exponent
+    old_len = len(chunks)
+
+    if old_len < precision:
+        return bigf
+
+    chunks = chunks[-precision:]
+    exp = exp + (old_len - len(chunks)) * BigFloat.CHUNK_SIZE
+
+    return BigFloat(bigf.sign, chunks, exp)
+
+
+def get_mantiss(chunks: list):
     
     result_mantiss_string = ''
     for i in range(len(chunks) - 1, -1, -1):
@@ -83,7 +98,7 @@ def divide_to_mantiss_and_to_exponent(input_text: str):
         mantiss = input_text.replace('.', '')
     else:
         mantiss, exponent = input_text, 0
-    print(f"мантисса = {mantiss}, экспонента = {exponent}")
+    # print(f"мантисса = {mantiss}, экспонента = {exponent}")
     return mantiss, exponent
 
 
@@ -96,7 +111,7 @@ def divide_to_chunks(mantiss: str, base: int):
         chunk_boarder = max(0, i - base)
         chunks.append(int(mantiss[chunk_boarder : i]))
     # print(f"чанки = {tuple(chunks)}")
-    return tuple(chunks)
+    return chunks
 
 
 def from_string(input_text: str):

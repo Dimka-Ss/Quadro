@@ -40,7 +40,7 @@ class Input(Interpretator):
                 return Result.fail(result.error, '')
         
             result_string.append(result.value)
-        return Result.good(tuple(result_string), '')
+        return Result.good(result_string, '')
 
 
 def is_digit(char):
@@ -75,7 +75,7 @@ def build_BigFloat(sign_value, int_value, frac_value, exp_value):
         chunk_boarder = max(0, i - BigFloat.CHUNK_SIZE)
         chunks.append(int(mantiss[chunk_boarder : i]))
 
-    return BigFloat(sign, tuple(chunks), exp)
+    return BigFloat(sign, chunks, exp)
 
 
 class FloatParser(Interpretator):
