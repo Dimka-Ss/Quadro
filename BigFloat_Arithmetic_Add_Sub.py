@@ -4,7 +4,7 @@ from BigFloat import *
 
 
 
-def calculate_of_align(mantiss: tuple, diff: int, base: BigFloat):
+def calculate_of_align(mantiss: list, diff: int, base: BigFloat):
     
     align_multiplier = 10**diff
 
@@ -21,7 +21,7 @@ def calculate_of_align(mantiss: tuple, diff: int, base: BigFloat):
         result_mantiss.append(carry % base)
         carry = carry // base
 
-    return tuple(result_mantiss)
+    return result_mantiss
 
 
 def align(bigf1: BigFloat, bigf2: BigFloat):
@@ -103,7 +103,7 @@ def common_add(bigf1: BigFloat, bigf2: BigFloat, base: int):
         result_mantiss.append(carry % base)
         carry = carry // base
     
-    return tuple(result_mantiss)
+    return result_mantiss
 
 
 def common_sub(bigf1: BigFloat, bigf2: BigFloat, base: int):
@@ -135,7 +135,7 @@ def common_sub(bigf1: BigFloat, bigf2: BigFloat, base: int):
             borrow = 0
         
         result_mantiss.append(diff)    
-    return tuple(result_mantiss) 
+    return result_mantiss
 
 
 def addition(bigf1: BigFloat, bigf2: BigFloat):
@@ -167,7 +167,7 @@ def addition(bigf1: BigFloat, bigf2: BigFloat):
                                                 BigFloat.BASE)
         elif result_of_compare == 0:
             result_sign = 1
-            result_of_substraction = tuple([0])
+            result_of_substraction = [0]
 
         new_bigf = BigFloat(result_sign, 
                             result_of_substraction, 
@@ -175,7 +175,7 @@ def addition(bigf1: BigFloat, bigf2: BigFloat):
         return normalize(new_bigf)
 
 
-def substruction(bigf1: BigFloat, bigf2: BigFloat):
+def subtruction(bigf1: BigFloat, bigf2: BigFloat):
     negative_copy_bigf2 = BigFloat(bigf2.sign * -1, bigf2.chunks, bigf2.exponent)
     return addition(bigf1, negative_copy_bigf2)
 
