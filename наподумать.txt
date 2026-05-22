@@ -1,0 +1,191 @@
+Обработка special_variables - float констант nan, inf
+
+NAN_VARIABLES = ['nan']
+INF_VARIABLES = ['inf', 'infinity']
+
+SpecialVariables:
+    NAN    = 'nan'
+    NegInf = '-inf'
+    PosInf = 'inf'
+
+    def __init__(self, type: str):
+        self.type = type
+
+    def is_inf(self):
+        return self.type == SpecialVariables.NegInf or self.type == SpecialVariables.PosInf
+
+    def is_nan(self):
+        return self.type == SpecialVariables.NAN
+
+    def is_pos_inf(self):
+        return self.type == SpecialVariables.PosInf
+
+    def is_neg_inf(self):
+        return self.type == SpecialVariables.NegInf
+
+
+1. Получение special_variables
+    Получение происходит в Интерпретаторе BigFloat_Interpret
+    после парсинга знака запуск специальной функции - is_special_varible(text)
+    где text - остаток строки после парсинга знака
+
+    def is_special_varible(text) -> bool:
+        return text.lower() in INF_VARIABLES or text.lower() in NAN_VARIABLES
+
+    Если is_special_varible(text):
+        return build_special_variable(sign_value, text)
+
+    def build_special_variable(sign, text) -> Result:
+        s = text.lower()
+        if s in NAN_VARIABLES:
+            return Result.good(SpecialVariables(SpecialVariables.NAN), '')
+        if s in INF_VARIABLES:
+            if sign == '-':
+                return Result.good(SpecialVariables(SpecialVariables.NegInf), '')
+            else:
+                return Result.good(SpecialVariables(SpecialVariables.PosInf), '')
+            
+
+2. Арифметика SpecialVariables
+    После работы интерпретатора мы получили coefs, содержащий 
+    коэффициенты - элементы класса, проверяем coefs на наличие 
+    SpecialVariables, при помощи функции is_special_in_coefs(coefs)
+
+    def is_special(x) -> bool:
+        return isinstance(x, SpecialVariables)
+
+    def is_special_in_coefs(coefs: Coefs) -> bool:
+        return any(is_special(x) for x in [coefs.a, coefs.b, coefs.c])
+
+    def is_zero_bigf(x) -> bool:
+        return isinstance(x, BigFloat) and mantiss_is_zero(x.chunks)
+
+
+    def special_linear_sol(b, c) -> Answer:
+
+        if is_special(b) and is_special(c):
+            +-inf / +-inf = nan
+            return Answer(answer_type=Answer_options.LINEAR, x1=SpecialVariables(SpecialVariables.NAN))
+
+        if is_special(b) and not is_special(c):
+            c конечное / +-inf = 0
+            return Answer(answer_type=Answer_options.LINEAR, x1=BigFloat(1, [0], 0))
+
+        if not is_special(b) and is_special(c):
+            if is_zero_bigf(b):
+                # 0*x + inf = 0 - нет решений
+                return Answer(answer_type=Answer_options.NO_SOLUTIONS)
+            else:
+                b конечное != 0, c = +-inf -> x = -c/b = +-inf
+                знак: если знаки b и c одинаковые → x отрицательный
+                result_pos = c.is_neg_inf() == (b.sign == 1)
+                x1 = SpecialVariables(SpecialVariables.PosInf) if result_pos else SpecialVariables(SpecialVariables.NegInf)
+                return Answer(answer_type=Answer_options.LINEAR, x1=x1)
+
+        
+        # оба конечные — не должны сюда попасть
+        if is_zero_bigf(b) and is_zero_bigf(c):
+            return Answer(answer_type=Answer_options.INFINITY_SOLUTIONS)
+        if is_zero_bigf(b):
+            return Answer(answer_type=Answer_options.NO_SOLUTIONS)
+        return linear_solution(b, c)
+
+
+    Если is_special_in_coefs(coefs):
+        return special_solver(coefs)
+
+
+    def special_solver(coefs: Coefs) -> Answer:
+        NAN     = SpecialVariables(SpecialVariables.NAN)
+        POS_INF = SpecialVariables(SpecialVariables.PosInf)
+        NEG_INF = SpecialVariables(SpecialVariables.NegInf)
+
+        a, b, c = coefs.a, coefs.b, coefs.c
+
+        # любой nan -> всё nan
+        if any(is_special(x) and x.is_nan() for x in [a, b, c]):
+            return Answer(answer_type=Answer_options.DIFFERENT_ROOTS, x1=NAN, x2=NAN)
+
+        # a = +-inf -> уравнение вырождается
+        if is_special(a) and a.is_inf():
+            return Answer(answer_type=Answer_options.DIFFERENT_ROOTS, x1=NAN, x2=NAN)
+
+        # a = 0 -> линейное со спец. значениями
+        if is_zero_bigf(a):
+            return special_linear_sol(b, c)
+
+        # a - конечное != 0, смотрим b и c
+
+        if not is_zero_bigf(a) and is_special(b) and is_special(c):
+            # D = inf**2 - 4*a*inf = inf - inf = nan
+            return Answer(answer_type=Answer_options.DIFFERENT_ROOTS, x1=NAN, x2=NAN)
+
+        if not is_zero_bigf(a) and is_special(b) and not is_special(c):
+            # D = b**2 - 4*a*c = +inf (b**2 всегда +inf)
+            if b.is_pos_inf():
+                # x1 = (-inf + inf) / 2a = nan
+                return Answer(answer_type=Answer_options.DIFFERENT_ROOTS, x1=NAN, x2=NAN)
+            else:
+                # b = -inf → -b = +inf → x1 = +inf / 2a
+                # знак x1 определяется знаком a
+                x1 = POS_INF if a.sign == 1 else NEG_INF
+                # x2 = c / (a · x1) = конечное / inf = 0
+                x2 = BigFloat(1, [0], 0)
+                return Answer(answer_type=Answer_options.DIFFERENT_ROOTS, x1=x1, x2=x2)
+
+        if not is_zero_bigf(a) and not is_special(b) and is_special(c):
+            # D = b**2 - 4*a*c, b конечное -> D определяется знаком 4*a*c
+            # знак произведения a*c
+            ac_pos = (a.sign == 1) == c.is_pos_inf()
+
+            if ac_pos:
+                # 4*a*c = +inf -> D = b**2 - inf = -inf → комплексные корни
+                # re = -b / 2a  (оба конечные, считаем обычно)
+
+                TWO = BigFloat(1, [2], 0)
+                neg_b = BigFloat(b.sign * -1, list(b.chunks), b.exponent)
+                two_a = mul(TWO, a)
+
+                real_part = div(neg_b, two_a)
+                x1 = ComplexBigFloat(real=real_part, imag=POS_INF)
+                x2 = ComplexBigFloat(real=real_part, imag=NEG_INF)
+
+                return Answer(answer_type=Answer_options.COMPLEX_SOLUTIONS, x1=x1, x2=x2)
+
+            else:
+                # 4*a*c = -inf → D = b**2 + inf = +inf -> вещественные корни ±inf
+                
+                x1 = POS_INF if a.sign == 1 else NEG_INF
+                x2 = NEG_INF if a.sign == 1 else POS_INF
+                return Answer(answer_type=Answer_options.DIFFERENT_ROOTS, x1=x1, x2=x2)
+
+
+                
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
