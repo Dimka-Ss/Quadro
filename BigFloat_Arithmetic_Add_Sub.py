@@ -97,6 +97,12 @@ def common_sub(bigf1: BigFloat, bigf2: BigFloat):
 
 def addition(bigf1: BigFloat, bigf2: BigFloat):
 
+    if mantiss_is_zero(bigf1.chunks):
+        return normalize(copy_BF(bigf2))
+    
+    if mantiss_is_zero(bigf2.chunks):
+        return normalize(copy_BF(bigf1))
+
     a, b = align(copy_BF(bigf1), copy_BF(bigf2))
 
     if a.sign == b.sign:

@@ -55,6 +55,7 @@ def values_equal(bf_val, dec_val, precision):
 
     if bf_val is None and dec_val is None:
         return True
+    
     if bf_val is None or dec_val is None:
        return False 
     
@@ -67,7 +68,6 @@ def values_equal(bf_val, dec_val, precision):
     if isinstance(bf_val, ComplexBigFloat) and isinstance(dec_val, DecComplex):
         return (values_equal(bf_val.real, dec_val.real, precision) and
                 values_equal(bf_val.imag, dec_val.imag, precision))
- 
     
     if isinstance(bf_val, ComplexBigFloat) or isinstance(dec_val, DecComplex):
         return False

@@ -85,7 +85,7 @@ def ac_pos(a, c):
     return (a.sign == 1) == c.is_pos_inf()
  
  
-def ac_pos_roots(a, b, c, NAN, POS_INF, NEG_INF):
+def ac_pos_roots(a, b, POS_INF, NEG_INF):
     TWO = BigFloat(1, [2], 0)
     neg_b = BigFloat(b.sign * -1, list(b.chunks), b.exponent)
     two_a = mul(TWO, a)

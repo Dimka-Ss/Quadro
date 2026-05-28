@@ -47,7 +47,9 @@ def newton_reciprocal(x, x_null):
     return x_null
 
 
-
+if __name__ == "__main__":
+    s = from_string('64')
+    print(to_string_for_output(Sqrt(s)))
 
 
 
