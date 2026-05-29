@@ -67,11 +67,11 @@ def nzero_spec_nspec_roots(a, b, c, NAN, POS_INF, NEG_INF):
     if b.is_pos_inf(): 
 
         x1 = NEG_INF if a.sign == 1 else POS_INF
-        x2 = BigFloat(1, [0], 0)
+        x2 = NAN
         return Answer(answer_type=Answer_options.SPECIAL_VARIABLES, x1=x1, x2=x2)
     else:
         x1 = POS_INF if a.sign == 1 else NEG_INF
-        x2 = BigFloat(1, [0], 0)
+        x2 = NAN
         return Answer(answer_type=Answer_options.SPECIAL_VARIABLES, x1=x1, x2=x2)
  
  
@@ -117,7 +117,7 @@ def special_linear_sol(b, c):
  
 def nzero_nspec_spec_roots(a, b, c, NAN, POS_INF, NEG_INF):
     if ac_pos(a, c):
-        return ac_pos_roots(a, b, c, NAN, POS_INF, NEG_INF)
+        return ac_pos_roots(a, b, POS_INF, NEG_INF)
     else:
         return ac_neg_roots(a, POS_INF, NEG_INF)
  
